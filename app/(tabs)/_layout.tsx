@@ -20,6 +20,13 @@ export default function TabsLayout() {
           }}
         />
         <Stack.Screen
+          name='favorites'
+          options={{
+            title: 'Favorit',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
           name='kpr-calculator'
           options={{
             title: 'KPR Calculator',
@@ -29,8 +36,12 @@ export default function TabsLayout() {
         <Stack.Screen
           name='profile'
           options={{
-            title: 'Profil',
-            headerShown: false,
+            title: 'Akun Saya',
+            headerShown: true,
+            headerBackVisible: false,
+            headerTitleAlign: 'left',
+            headerTintColor: '#374151',
+            headerShadowVisible: false,
           }}
         />
       </Stack>
