@@ -107,7 +107,7 @@ const LoginScreen = () => {
       // Handle success
       const token = data.results.token;
       const user = data.results.user;
-      login(token, user);
+      login(user, token);
       setLoginAttempts(0);
       reset();
       router.replace('/(tabs)/home');

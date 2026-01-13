@@ -25,6 +25,7 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
     console.log('✅ Authorization header ditambahkan');
   } else {
+    useAuthStore.getState().logout();
     console.warn('⚠️ Token tidak ditemukan di auth store');
   }
   console.log('📍 Endpoint:', config.url);
