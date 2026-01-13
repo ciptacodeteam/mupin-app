@@ -52,7 +52,31 @@ api.interceptors.response.use(
       console.error('Server Error:', response.status, response.data);
     }
 
-    return Promise.reject(error);
+    let errorMessage = 'Terjadi kesalahan. Silakan coba lagi.';
+
+    if (error?.code === 'ECONNABORTED') {
+      errorMessage = 'Koneksi timeout. Pastikan server API dapat diakses.';
+    } else if (error?.code === 'ENOTFOUND' || error?.code === 'ECONNREFUSED') {
+      errorMessage =
+        'Tidak dapat terhubung ke server. Periksa konfigurasi API.';
+    } else if (error?.response?.status === 401) {
+      errorMessage = 'Email atau kata sandi salah.';
+    } else if (error?.response?.status === 422) {
+      errorMessage =
+        error?.response?.data?.message || 'Data yang dikirim tidak valid.';
+    } else if (error?.response?.status === 429) {
+      errorMessage = 'Terlalu banyak percobaan. Coba lagi nanti.';
+    } else if (error?.response?.status >= 500) {
+      errorMessage = 'Terjadi kesalahan pada server. Silakan coba lagi nanti.';
+    } else if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+
+    error.message = errorMessage;
+
+    return Promise.reject(error.response.data);
   }
 );
 

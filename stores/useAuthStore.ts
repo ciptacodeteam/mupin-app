@@ -1,13 +1,14 @@
+import { User } from '@/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface AuthState {
   isAuthenticated: boolean;
-  user: any;
+  user: User | null;
   token: string | null;
-  setUser: (user: any, token: string) => void;
-  login: (user: any, token: string) => void;
+  setUser: (user: User, token: string) => void;
+  login: (user: User, token: string) => void;
   logout: () => void;
 }
 

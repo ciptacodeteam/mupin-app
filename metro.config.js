@@ -3,4 +3,7 @@ const { withNativeWind } = require('nativewind/metro');
 
 const config = getDefaultConfig(__dirname);
 
-module.exports = withNativeWind(config, { input: './styles/main.css' });
+module.exports = withNativeWind(config, {
+  input: './styles/main.css',
+  inlineRem: 16,
+});
