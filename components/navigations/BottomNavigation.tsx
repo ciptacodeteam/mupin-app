@@ -26,20 +26,20 @@ const TAB_ITEMS: BottomNavItem[] = [
     pathSegment: 'home',
   },
   {
+    name: 'kpr',
+    label: 'Simulasi KPR',
+    icon: 'calculator-variant-outline',
+    activeIcon: 'calculator-variant',
+    route: '/(tabs)/kpr-calculator',
+    pathSegment: 'kpr-calculator',
+  },
+  {
     name: 'favorites',
     label: 'Favorit',
     icon: 'cards-heart-outline',
     activeIcon: 'cards-heart',
     route: '/(tabs)/favorites',
     pathSegment: 'favorites',
-  },
-  {
-    name: 'kpr',
-    label: 'KPR Kalkulator',
-    icon: 'calculator-variant-outline',
-    activeIcon: 'calculator-variant',
-    route: '/(tabs)/kpr-calculator',
-    pathSegment: 'kpr-calculator',
   },
   {
     name: 'profile',

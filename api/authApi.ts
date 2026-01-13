@@ -29,3 +29,11 @@ export async function changeProfileApi(payload) {
   });
   return data;
 }
+
+export async function qrLoginScanApi(qrCode: string) {
+  const { data } = await api.post('/auth/qr-login/scan', {
+    qr_code: qrCode,
+    app_key: process.env.EXPO_PUBLIC_MOBILE_APP_KEY,
+  });
+  return data;
+}

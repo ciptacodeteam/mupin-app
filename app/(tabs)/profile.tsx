@@ -37,7 +37,8 @@ const ProfileScreen = () => {
       router.replace('/auth/login');
     },
     onError: () => {
-      Alert.alert('Error', 'Failed to logout. Please try again.');
+      logout();
+      router.replace('/auth/login');
     },
   });
 
@@ -121,7 +122,7 @@ const ProfileScreen = () => {
           <View className='overflow-hidden rounded-lg bg-gray-50'>
             <TouchableOpacity
               className='flex-row items-center justify-between px-4 py-4 border-b border-gray-200'
-              disabled
+              onPress={() => router.push('/scan-qr')}
             >
               <View className='flex-row items-center flex-1'>
                 <View className='items-center justify-center w-10 h-10 mr-3 bg-blue-100 rounded-lg'>
