@@ -143,7 +143,7 @@ const ProfileScreen = () => {
               />
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               className='flex-row items-center justify-between px-4 py-4'
               // onPress={() => router.push('/app-settings')}
               disabled
@@ -165,12 +165,34 @@ const ProfileScreen = () => {
                 size={24}
                 color='#d1d5db'
               />
+            </TouchableOpacity> */}
+            <TouchableOpacity
+              className='flex-row items-center justify-between px-4 py-4'
+              onPress={() => setAppInfoModalVisible(true)}
+            >
+              <View className='flex-row items-center flex-1'>
+                <View className='items-center justify-center w-10 h-10 mr-3 bg-blue-100 rounded-lg'>
+                  <MaterialCommunityIcons
+                    name='help-circle'
+                    size={20}
+                    color='#3b82f6'
+                  />
+                </View>
+                <Text className='text-base font-medium text-gray-900'>
+                  App Info
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name='chevron-right'
+                size={24}
+                color='#d1d5db'
+              />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Support Section */}
-        <View className='px-4 py-6 border-t border-gray-200'>
+        {/* <View className='px-4 py-6 border-t border-gray-200'>
           <Text className='mb-3 text-xs font-bold tracking-wider text-gray-500 uppercase'>
             Support
           </Text>
@@ -198,7 +220,7 @@ const ProfileScreen = () => {
               />
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
         {/* Logout Button */}
         <View className='px-4 py-6 '>
