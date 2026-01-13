@@ -1,11 +1,8 @@
 import BottomNavigation from '@/components/navigations/BottomNavigation';
-import { Stack, usePathname } from 'expo-router';
+import { Stack } from 'expo-router';
 import { View } from 'react-native';
 
 export default function TabsLayout() {
-  const pathname = usePathname();
-  const currentTab = pathname.split('/')[1] || 'home';
-
   return (
     <View className='flex-1 bg-white'>
       <Stack
@@ -37,7 +34,7 @@ export default function TabsLayout() {
           }}
         />
       </Stack>
-      <BottomNavigation currentRoute={currentTab} />
+      <BottomNavigation />
     </View>
   );
 }
