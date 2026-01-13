@@ -3,10 +3,9 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
+      "@/*": ["./*"]
+    },
+    "noImplicitAny": false
   },
   "include": [
     "**/*.ts",
