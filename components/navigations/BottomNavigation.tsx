@@ -30,8 +30,8 @@ const TAB_ITEMS: BottomNavItem[] = [
     label: 'Simulasi KPR',
     icon: 'calculator-variant-outline',
     activeIcon: 'calculator-variant',
-    route: '/(tabs)/kpr-calculator',
-    pathSegment: 'kpr-calculator',
+    route: '/(tabs)/kpr-simulator',
+    pathSegment: 'kpr-simulator',
   },
   {
     name: 'favorites',

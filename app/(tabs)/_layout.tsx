@@ -27,10 +27,14 @@ export default function TabsLayout() {
           }}
         />
         <Stack.Screen
-          name='kpr-calculator'
+          name='kpr-simulator'
           options={{
-            title: 'KPR Calculator',
-            headerShown: false,
+            title: 'KPR Simulator',
+            headerShown: true,
+            headerBackVisible: false,
+            headerTitleAlign: 'left',
+            headerTintColor: '#374151',
+            headerShadowVisible: false,
           }}
         />
         <Stack.Screen
