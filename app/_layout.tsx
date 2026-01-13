@@ -1,7 +1,9 @@
+import useAuthStore from '@/stores/useAuthStore';
 import '@/styles/main.css';
 import { PortalHost } from '@rn-primitives/portal';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import { id } from 'zod/locales';
@@ -17,18 +19,39 @@ const queryClient = new QueryClient({
   },
 });
 
+function RootLayoutContent() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/auth/login');
+    }
+  }, [isAuthenticated, router]);
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      {isAuthenticated ? (
+        <>
+          <Stack.Screen name='(tabs)' />
+          <Stack.Screen name='scan-qr' />
+        </>
+      ) : (
+        <Stack.Screen name='auth/login' />
+      )}
+    </Stack>
+  );
+}
+
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <SafeAreaProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name='(tabs)' />
-          <Stack.Screen name='auth/login' />
-        </Stack>
+        <RootLayoutContent />
       </SafeAreaProvider>
       <PortalHost />
     </QueryClientProvider>
