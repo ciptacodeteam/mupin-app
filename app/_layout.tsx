@@ -2,8 +2,13 @@ import useAuthStore from '@/stores/useAuthStore';
 import '@/styles/main.css';
 import { PortalHost } from '@rn-primitives/portal';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import {
+  Stack,
+  useRootNavigationState,
+  useRouter,
+  useSegments,
+} from 'expo-router';
+import { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import { id } from 'zod/locales';
@@ -22,12 +27,26 @@ const queryClient = new QueryClient({
 function RootLayoutContent() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const router = useRouter();
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
+
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted || !navigationState?.key) return;
+
+    const inAuthGroup = segments[0] === 'auth';
+
+    if (!isAuthenticated && !inAuthGroup) {
       router.replace('/auth/login');
+    } else if (isAuthenticated && inAuthGroup) {
+      router.replace('/(tabs)/home');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, segments, navigationState?.key, isMounted, router]);
 
   return (
     <Stack
