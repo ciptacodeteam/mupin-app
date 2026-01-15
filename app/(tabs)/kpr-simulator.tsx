@@ -1,14 +1,14 @@
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
-import { formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import { Banknote, Calendar, Info, Percent } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { z } from 'zod';
 
 // Validation Schema
@@ -68,21 +68,24 @@ const CurrencyInputField = ({
   displayValue,
   onChangeText,
   error,
+  icon: Icon,
   disabled = false,
 }: {
   label: string;
   displayValue: string;
   onChangeText: (text: string) => void;
   error?: string;
+  icon?: any;
   disabled?: boolean;
 }) => {
   return (
     <View className='mb-4'>
-      <Text className='mb-2 text-sm font-medium'>{label}</Text>
-      <View className='flex-row items-center px-3 bg-white border rounded-lg border-neutral-200'>
-        <Text className='mr-2 text-neutral-600'>Rp.</Text>
+      <Text className='mb-2 text-sm font-medium text-neutral-700'>{label}</Text>
+      <View className='flex-row items-center px-3 bg-white border rounded-xl border-neutral-200'>
+        {Icon && <Icon size={20} color='#6b7280' className='mr-2' />}
+        <Text className='mr-1 font-medium text-neutral-500'>Rp</Text>
         <Input
-          className='flex-1 h-12 px-0 border-0'
+          className='flex-1 h-12 px-0 text-base font-semibold border-0'
           placeholder='0'
           value={displayValue}
           onChangeText={onChangeText}
@@ -95,6 +98,33 @@ const CurrencyInputField = ({
   );
 };
 
+const QuickTenorButton = ({
+  years,
+  active,
+  onPress,
+}: {
+  years: number;
+  active: boolean;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    className={cn(
+      'px-4 py-2 mr-2 rounded-full border',
+      active ? 'bg-blue-600 border-blue-600' : 'bg-white border-neutral-200'
+    )}
+  >
+    <Text
+      className={cn(
+        'text-sm font-medium',
+        active ? 'text-white' : 'text-neutral-600'
+      )}
+    >
+      {years} Thn
+    </Text>
+  </TouchableOpacity>
+);
+
 // PMT Calculation Function
 function calculatePMT(rate: number, nper: number, pv: number) {
   const monthlyRate = rate / 100 / 12;
@@ -104,10 +134,8 @@ function calculatePMT(rate: number, nper: number, pv: number) {
 }
 
 const KPRCalculatorScreen = ({ price }: { price?: number }) => {
-  const [isCalculating, setIsCalculating] = useState(false);
   const [calculateResult, setCalculateResult] =
     useState<CalculationResult | null>(null);
-  const [showResults, setShowResults] = useState(false);
   const [uangMukaPercent, setUangMukaPercent] = useState('0');
 
   // Display values for formatted numbers
@@ -117,7 +145,6 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
   const [bungaDisplay, setBungaDisplay] = useState('5');
 
   const {
-    handleSubmit,
     watch,
     setValue,
     formState: { errors },
@@ -130,6 +157,54 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
       bunga: 5,
     },
   });
+
+  const formValues = watch();
+
+  // Real-time calculation
+  useEffect(() => {
+    const calculate = async () => {
+      // Basic validation check before calculating
+      if (
+        formValues.hargaProperty > 0 &&
+        formValues.jangkaCicilan > 0 &&
+        formValues.bunga >= 0
+      ) {
+        const plafondCost = formValues.hargaProperty - formValues.uangMuka;
+        if (plafondCost <= 0) {
+          setCalculateResult(null);
+          return;
+        }
+
+        const pmt = calculatePMT(
+          formValues.bunga,
+          formValues.jangkaCicilan,
+          -plafondCost
+        );
+
+        const ipmt = formValues.jangkaCicilan * 12 * pmt;
+        const totalBunga = ipmt - plafondCost;
+
+        const cicilanNasabah =
+          (plafondCost + totalBunga) / (formValues.jangkaCicilan * 12);
+
+        setCalculateResult({
+          totalBunga: Math.round(totalBunga),
+          cicilanNasabah: Math.round(cicilanNasabah),
+          bunga: formValues.bunga,
+          plafondCost: plafondCost,
+        });
+      } else {
+        setCalculateResult(null);
+      }
+    };
+
+    calculate();
+  }, [
+    formValues.hargaProperty,
+    formValues.uangMuka,
+    formValues.jangkaCicilan,
+    formValues.bunga,
+  ]);
 
   const hargaProperty = watch('hargaProperty');
 
@@ -148,8 +223,8 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
 
     const numValue = parseFormattedNumber(formatted);
     setValue('hargaProperty', numValue);
-    setCalculateResult(null);
-    setShowResults(false);
+    // Trigger haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   // Handle uang muka change and update percentage
@@ -165,8 +240,8 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
       const roundedPercent = Math.min(100, Math.max(0, percent));
       setUangMukaPercent(roundedPercent.toFixed(0));
     }
-    setCalculateResult(null);
-    setShowResults(false);
+    // Trigger haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   // Handle uang muka percentage change and update value
@@ -186,8 +261,8 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
     const roundedDownPayment = Math.round(downPayment);
     setValue('uangMuka', roundedDownPayment);
     setUangMukaDisplay(formatNumberDisplay(roundedDownPayment));
-    setCalculateResult(null);
-    setShowResults(false);
+    // Trigger haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   // Handle jangka cicilan change
@@ -196,8 +271,8 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
     setJangkaCicilanDisplay(numStr);
     const numValue = parseInt(numStr, 10) || 0;
     setValue('jangkaCicilan', numValue);
-    setCalculateResult(null);
-    setShowResults(false);
+    // Trigger haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   // Handle bunga change
@@ -205,64 +280,57 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
     setBungaDisplay(text);
     const numValue = parseFloat(text) || 0;
     setValue('bunga', numValue);
-    setCalculateResult(null);
-    setShowResults(false);
-  };
-
-  // Calculate KPR
-  const onSubmit = async (data: KPRFormData) => {
-    setIsCalculating(true);
-    setShowResults(false);
-
-    // Simulate processing delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const plafondCost = data.hargaProperty - data.uangMuka;
-
-    const pmt = calculatePMT(data.bunga, data.jangkaCicilan, -plafondCost);
-
-    const ipmt = data.jangkaCicilan * 12 * pmt;
-    const totalBunga = ipmt - plafondCost;
-
-    const cicilanNasabah =
-      (plafondCost + totalBunga) / (data.jangkaCicilan * 12);
-
-    setCalculateResult({
-      totalBunga: Math.round(totalBunga),
-      cicilanNasabah: Math.round(cicilanNasabah),
-      bunga: data.bunga,
-      plafondCost: plafondCost,
-    });
-
-    setShowResults(true);
-    setIsCalculating(false);
+    // Trigger haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
     <ScrollView
-      className='flex-1 bg-white'
+      className='flex-1 bg-neutral-50'
       showsVerticalScrollIndicator={false}
     >
-      <View className='p-4'>
-        {/* Info Alert */}
-        <Card className='p-4 mb-4 border-0 border-l-4 border-blue-500 bg-blue-50'>
-          <View className='flex-row items-start'>
-            <Text className='mr-3 text-lg'>ℹ️</Text>
-            <View className='flex-1'>
-              <Text className='mb-1 font-medium text-gray-900'>
-                Tips Simulasi KPR
-              </Text>
-              <Text className='text-xs leading-4 text-gray-600'>
-                Lengkapi semua data properti untuk mendapatkan estimasi cicilan
-                bulanan yang akurat sesuai dengan kondisi pasar terkini
-              </Text>
+      <View className='p-4 pb-12'>
+        {/* Summary Board */}
+        {calculateResult && (
+          <Card className='p-6 mb-6 overflow-hidden bg-blue-600 border-0 rounded-3xl'>
+            <View className='flex-row items-center justify-between mb-4'>
+              <View>
+                <Text className='text-sm font-medium text-blue-100'>
+                  Estimasi Cicilan
+                </Text>
+                <Text className='text-3xl font-bold text-white'>
+                  {formatCurrency(
+                    calculateResult.cicilanNasabah,
+                    'id-ID',
+                    'IDR'
+                  )}
+                </Text>
+              </View>
+              <View className='items-center justify-center w-12 h-12 bg-white/20 rounded-2xl'>
+                <Banknote size={24} color='white' />
+              </View>
             </View>
-          </View>
-        </Card>
+            <Separator className='mb-4 bg-white/20' />
+            <View className='flex-row justify-between'>
+              <View>
+                <Text className='text-xs text-blue-100'>Plafon Kredit</Text>
+                <Text className='font-semibold text-white'>
+                  {formatCurrency(calculateResult.plafondCost, 'id-ID', 'IDR')}
+                </Text>
+              </View>
+              <View className='items-end'>
+                <Text className='text-xs text-blue-100'>Tenor</Text>
+                <Text className='font-semibold text-white'>
+                  {formValues.jangkaCicilan} Tahun
+                </Text>
+              </View>
+            </View>
+          </Card>
+        )}
 
-        {/* Form Card */}
-        <Card className='p-4 px-0 mb-6 border-0'>
-          <View className='space-y-4'>
+        <View className='gap-y-4'>
+          {/* Form Card */}
+          <Card className='p-4 py-6 bg-white border-0 shadow-sm gap-y-0 rounded-3xl'>
             {/* Harga Property */}
             <CurrencyInputField
               label='Harga Properti'
@@ -271,16 +339,18 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
               error={errors.hargaProperty?.message}
             />
 
-            <Separator className='mb-4' />
+            <Separator className='mt-2 mb-4' />
 
             {/* Uang Muka & Percentage */}
-            <View>
-              <Text className='mb-3 text-sm font-medium'>Uang Muka</Text>
-              <View className='flex-row'>
-                <View className='flex-[2] flex-row items-center border border-neutral-200 rounded-lg px-3 bg-white'>
-                  <Text className='mr-2 text-neutral-600'>Rp.</Text>
+            <View className='mb-4'>
+              <Text className='mb-2 text-sm font-medium text-neutral-700'>
+                Uang Muka (DP)
+              </Text>
+              <View className='flex-row gap-3'>
+                <View className='flex-[2] flex-row items-center border border-neutral-200 rounded-xl px-3 bg-white'>
+                  <Text className='mr-1 font-medium text-neutral-500'>Rp</Text>
                   <Input
-                    className='flex-1 h-12 px-0 border-0'
+                    className='flex-1 h-12 px-0 text-base font-semibold border-0'
                     placeholder='0'
                     value={uangMukaDisplay}
                     onChangeText={handleUangMukaChange}
@@ -288,16 +358,16 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
                     keyboardType='number-pad'
                   />
                 </View>
-                <View className='flex-row items-center flex-1 px-3 ml-3 bg-white border rounded-lg border-neutral-200'>
+                <View className='flex-row items-center flex-1 border rounded-xl border-neutral-200'>
                   <Input
-                    className='flex-1 h-12 px-0 text-right border-0'
+                    className='flex-1 h-12 px-0 text-base font-bold text-right text-blue-600 border-0 '
                     placeholder='0'
                     value={uangMukaPercent}
                     onChangeText={handleUangMukaPercentChange}
                     editable={hargaProperty > 0}
                     keyboardType='decimal-pad'
                   />
-                  <Text className='ml-2 text-neutral-600'>%</Text>
+                  <Text className='ml-1 mr-2 font-bold text-blue-600'>%</Text>
                 </View>
               </View>
               {errors.uangMuka && (
@@ -307,166 +377,127 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
               )}
             </View>
 
-            <Separator className='my-4' />
+            <Separator className='mt-2 mb-6' />
 
-            {/* Jangka Cicilan & Bunga */}
-            <View>
-              <Text className='mb-3 text-sm font-medium'>Tenor & Bunga</Text>
-              <View className='flex-row'>
-                <View className='flex-[2] flex-row items-center border border-neutral-200 rounded-lg px-3 bg-white'>
-                  <Input
-                    className='flex-1 h-12 px-0 border-0'
-                    placeholder='1'
-                    value={jangkaCicilanDisplay}
-                    onChangeText={handleJangkaCicilanChange}
-                    keyboardType='number-pad'
+            {/* Tenor Selection */}
+            <View className='mb-6'>
+              <Text className='mb-3 text-sm font-medium text-neutral-700'>
+                Tenor Pinjaman (Tahun)
+              </Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className='flex-row mb-4'
+                contentContainerStyle={{ paddingRight: 16 }}
+              >
+                {[
+                  5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80,
+                ].map((years) => (
+                  <QuickTenorButton
+                    key={years}
+                    years={years}
+                    active={formValues.jangkaCicilan === years}
+                    onPress={() => {
+                      handleJangkaCicilanChange(years.toString());
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    }}
                   />
-                  <Text className='ml-2 text-sm text-neutral-600'>Tahun</Text>
-                </View>
-                <View className='flex-row items-center flex-1 px-3 ml-3 bg-white border rounded-lg border-neutral-200'>
-                  <Input
-                    className='flex-1 h-12 px-0 text-right border-0'
-                    placeholder='0'
-                    value={bungaDisplay}
-                    onChangeText={handleBungaChange}
-                    keyboardType='decimal-pad'
-                  />
-                  <Text className='ml-2 text-neutral-600'>%</Text>
-                </View>
+                ))}
+              </ScrollView>
+              <View className='flex-row items-center px-3 bg-white border border-neutral-200 rounded-xl'>
+                <Calendar size={20} color='#6b7280' className='mr-2' />
+                <Input
+                  className='flex-1 h-12 px-0 ml-2 text-base font-semibold border-0'
+                  placeholder='10'
+                  value={jangkaCicilanDisplay}
+                  onChangeText={handleJangkaCicilanChange}
+                  keyboardType='number-pad'
+                />
+                <Text className='font-medium text-neutral-500'>Tahun</Text>
               </View>
-              {errors.jangkaCicilan && (
-                <Text className='mt-1 text-xs text-red-500'>
-                  {errors.jangkaCicilan.message}
-                </Text>
-              )}
-              {errors.bunga && (
-                <Text className='mt-1 text-xs text-red-500'>
-                  {errors.bunga.message}
-                </Text>
-              )}
             </View>
 
-            <Separator className='mt-4' />
-
-            {/* Calculate Button */}
-            <Button
-              onPress={handleSubmit(onSubmit)}
-              disabled={isCalculating}
-              className='mt-4'
-              size='lg'
-            >
-              {isCalculating ? (
-                <ActivityIndicator color='white' size='small' />
-              ) : (
-                <Text className='font-semibold text-white'>Simulasikan</Text>
-              )}
-            </Button>
-          </View>
-        </Card>
-
-        {/* Results Section */}
-        {!calculateResult ? (
-          <Card className='p-6 mb-6 border-0 bg-blue-50'>
-            <View className='items-center'>
-              <View className='items-center justify-center w-12 h-12 mb-3 bg-blue-100 rounded-full'>
-                <Text className='text-lg'>ℹ️</Text>
+            {/* Bunga Selection */}
+            <View className='mb-2'>
+              <Text className='mb-2 text-sm font-medium text-neutral-700'>
+                Suku Bunga Tahunan
+              </Text>
+              <View className='flex-row items-center px-3 bg-white border border-neutral-200 rounded-xl'>
+                <Percent size={20} color='#6b7280' className='mr-2' />
+                <Input
+                  className='flex-1 h-12 px-0 ml-2 text-base font-semibold border-0'
+                  placeholder='5'
+                  value={bungaDisplay}
+                  onChangeText={handleBungaChange}
+                  keyboardType='decimal-pad'
+                />
+                <Text className='font-medium text-neutral-500'>% / Tahun</Text>
               </View>
-              <Text className='mb-2 font-semibold text-center text-gray-900'>
-                Belum ada hasil simulasi
-              </Text>
-              <Text className='text-sm text-center text-gray-600'>
-                Silakan isi semua field simulasi di atas terlebih dahulu untuk
-                melihat hasil perhitungan KPR
-              </Text>
             </View>
           </Card>
-        ) : (
-          <Card className='p-4 mb-6 overflow-hidden bg-white '>
-            <Pressable
-              onPress={() => setShowResults(!showResults)}
-              className='flex-row items-center justify-between'
-            >
-              <Text className='font-semibold '>Hasil Simulasi</Text>
-              {showResults ? (
-                <ChevronUp size={24} color='#000' />
-              ) : (
-                <ChevronDown size={24} color='#000' />
-              )}
-            </Pressable>
 
-            {showResults && (
-              <View>
-                <Separator />
-                <View className='mt-4 space-y-4'>
-                  {/* Monthly Payment */}
-                  <View className='flex-row items-center justify-between'>
-                    <Text className='text-sm font-medium text-neutral-600'>
-                      Angsuran Bulanan
-                    </Text>
-                    <View className='items-end'>
-                      <Text className='text-lg font-bold'>
-                        {formatCurrency(
-                          calculateResult.cicilanNasabah,
-                          'id-ID',
-                          'IDR'
-                        )}
-                      </Text>
-                      <Text className='text-xs text-neutral-500'>/ Bulan</Text>
-                    </View>
-                  </View>
+          {/* Detailed Breakdown */}
+          {calculateResult && (
+            <Card className='p-6 bg-white border-0 rounded-3xl'>
+              <Text className='mb-4 text-lg font-bold text-neutral-900'>
+                Rincian Pinjaman
+              </Text>
+              <View className='gap-y-4'>
+                <View className='flex-row justify-between'>
+                  <Text className='text-neutral-500'>Plafon Pinjaman</Text>
+                  <Text className='font-semibold'>
+                    {formatCurrency(
+                      calculateResult.plafondCost,
+                      'id-ID',
+                      'IDR'
+                    )}
+                  </Text>
+                </View>
+                <View className='flex-row justify-between'>
+                  <Text className='text-neutral-500'>
+                    Total Bunga ({calculateResult.bunga}%)
+                  </Text>
+                  <Text className='font-semibold'>
+                    {formatCurrency(calculateResult.totalBunga, 'id-ID', 'IDR')}
+                  </Text>
+                </View>
 
-                  <Separator className='my-4' />
+                <Separator className='my-2' />
 
-                  {/* Loan Details */}
-                  <View className='space-y-3'>
-                    <View className='flex-row justify-between'>
-                      <Text className='text-sm text-neutral-600'>
-                        Plafon Kredit
-                      </Text>
-                      <Text className='font-medium'>
-                        {formatCurrency(
-                          calculateResult.plafondCost,
-                          'id-ID',
-                          'IDR'
-                        )}
-                      </Text>
-                    </View>
-
-                    <View className='flex-row justify-between'>
-                      <Text className='text-sm text-neutral-600'>
-                        Bunga {calculateResult.bunga}% / Tahun
-                      </Text>
-                      <Text className='font-medium'>
-                        {formatCurrency(
-                          calculateResult.totalBunga,
-                          'id-ID',
-                          'IDR'
-                        )}
-                      </Text>
-                    </View>
-
-                    <View className='flex-row justify-between'>
-                      <Text className='text-sm text-neutral-600'>
-                        Total Pembayaran
-                      </Text>
-                      <Text className='font-bold text-blue-600'>
-                        {formatCurrency(
-                          calculateResult.plafondCost +
-                            calculateResult.totalBunga,
-                          'id-ID',
-                          'IDR'
-                        )}
-                      </Text>
-                    </View>
-                  </View>
+                <View className='flex-row justify-between'>
+                  <Text className='text-base font-bold text-neutral-900'>
+                    Total Pembayaran
+                  </Text>
+                  <Text className='text-base font-bold text-blue-600'>
+                    {formatCurrency(
+                      calculateResult.plafondCost + calculateResult.totalBunga,
+                      'id-ID',
+                      'IDR'
+                    )}
+                  </Text>
                 </View>
               </View>
-            )}
-          </Card>
-        )}
+            </Card>
+          )}
 
-        {/* Footer Spacing */}
-        <View className='h-8' />
+          {/* Tips Card */}
+          <Card className='p-4 border-0 bg-orange-50 rounded-2xl'>
+            <View className='flex-row items-start'>
+              <View className='items-center justify-center mt-0.5 mr-3 w-8 h-8 bg-orange-100 rounded-lg'>
+                <Info size={18} color='#f97316' />
+              </View>
+              <View className='flex-1'>
+                <Text className='mb-1 font-bold text-orange-900'>
+                  Info Penting
+                </Text>
+                <Text className='text-xs leading-relaxed text-orange-800'>
+                  Hasil simulasi ini merupakan estimasi. Biaya admin, asuransi,
+                  dan biaya provisi belum termasuk dalam hitungan ini.
+                </Text>
+              </View>
+            </View>
+          </Card>
+        </View>
       </View>
     </ScrollView>
   );
