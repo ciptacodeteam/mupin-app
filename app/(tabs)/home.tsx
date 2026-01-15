@@ -78,7 +78,7 @@ const HomeScreen = () => {
 
       {/* Header Section */}
       <View
-        className='px-6 pb-4 bg-white border-b border-neutral-100 z-10'
+        className='z-10 px-6 pb-4 bg-white border-b border-neutral-100'
         style={{ paddingTop: insets.top + 10 }}
       >
         <View className='flex-row items-center justify-between mb-4'>
@@ -95,7 +95,7 @@ const HomeScreen = () => {
               </Text>
             </View>
           </View>
-          <TouchableOpacity className='items-center justify-center w-10 h-10 border rounded-full border-neutral-200 bg-white shadow-sm'>
+          <TouchableOpacity className='items-center justify-center w-10 h-10 bg-white border rounded-full shadow-sm border-neutral-200'>
             <Bell size={20} color='#334155' />
             <View className='absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white' />
           </TouchableOpacity>

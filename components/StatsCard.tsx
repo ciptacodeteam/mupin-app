@@ -39,7 +39,7 @@ export function StatsCard({
     }[color] || '#525252';
 
   return (
-    <Card className='w-40 p-4 mr-3 border-0 shadow-none bg-white rounded-2xl border-neutral-100 border'>
+    <Card className='w-40 p-4 mr-3 bg-white border border-0 shadow-none rounded-2xl border-neutral-100'>
       <View className='flex-row items-start justify-between mb-3'>
         <View
           className={cn(
@@ -59,7 +59,7 @@ export function StatsCard({
         )}
       </View>
       <View>
-        <Text className='text-xs font-medium text-neutral-500 mb-1'>
+        <Text className='mb-1 text-xs font-medium text-neutral-500'>
           {title}
         </Text>
         <Text className='text-xl font-bold text-neutral-900'>{value}</Text>
