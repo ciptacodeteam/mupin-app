@@ -11,6 +11,7 @@ module.exports = defineConfig([
       'import/no-duplicates': 'off',
       'import/namespace': 'off',
       'import/no-named-as-default-member': 'off',
+      'import/no-named-as-default': 'off',
     },
   },
 ]);
