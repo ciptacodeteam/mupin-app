@@ -85,7 +85,7 @@ const CurrencyInputField = ({
         {Icon && <Icon size={20} color='#6b7280' className='mr-2' />}
         <Text className='mr-1 font-medium text-neutral-500'>Rp</Text>
         <Input
-          className='flex-1 h-12 px-0 text-base font-semibold border-0'
+          className='flex-1 h-12 px-0 text-base font-semibold !bg-white border-0 shadow-none'
           placeholder='0'
           value={displayValue}
           onChangeText={onChangeText}
@@ -111,13 +111,13 @@ const QuickTenorButton = ({
     onPress={onPress}
     className={cn(
       'px-4 py-2 mr-2 rounded-full border',
-      active ? 'bg-blue-600 border-blue-600' : 'bg-white border-neutral-200'
+      active ? 'bg-blue-600 border-blue-600' : 'bg-white border-neutral-200',
     )}
   >
     <Text
       className={cn(
         'text-sm font-medium',
-        active ? 'text-white' : 'text-neutral-600'
+        active ? 'text-white' : 'text-neutral-600',
       )}
     >
       {years} Thn
@@ -178,7 +178,7 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
         const pmt = calculatePMT(
           formValues.bunga,
           formValues.jangkaCicilan,
-          -plafondCost
+          -plafondCost,
         );
 
         const ipmt = formValues.jangkaCicilan * 12 * pmt;
@@ -302,7 +302,7 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
                   {formatCurrency(
                     calculateResult.cicilanNasabah,
                     'id-ID',
-                    'IDR'
+                    'IDR',
                   )}
                 </Text>
               </View>
@@ -350,7 +350,7 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
                 <View className='flex-[2] flex-row items-center border border-neutral-200 rounded-xl px-3 bg-white'>
                   <Text className='mr-1 font-medium text-neutral-500'>Rp</Text>
                   <Input
-                    className='flex-1 h-12 px-0 text-base font-semibold border-0'
+                    className='flex-1 h-12 px-0 text-base font-semibold border-0 !bg-white shadow-none'
                     placeholder='0'
                     value={uangMukaDisplay}
                     onChangeText={handleUangMukaChange}
@@ -360,7 +360,7 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
                 </View>
                 <View className='flex-row items-center flex-1 border rounded-xl border-neutral-200'>
                   <Input
-                    className='flex-1 h-12 px-0 text-base font-bold text-right text-blue-600 border-0 '
+                    className='flex-1 h-12 px-0 text-base font-bold text-right text-blue-600 border-0 !bg-white shadow-none'
                     placeholder='0'
                     value={uangMukaPercent}
                     onChangeText={handleUangMukaPercentChange}
@@ -407,7 +407,7 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
               <View className='flex-row items-center px-3 bg-white border border-neutral-200 rounded-xl'>
                 <Calendar size={20} color='#6b7280' className='mr-2' />
                 <Input
-                  className='flex-1 h-12 px-0 ml-2 text-base font-semibold border-0'
+                  className='flex-1 h-12 px-0 ml-2 text-base font-semibold border-0 !bg-white shadow-none'
                   placeholder='10'
                   value={jangkaCicilanDisplay}
                   onChangeText={handleJangkaCicilanChange}
@@ -425,7 +425,7 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
               <View className='flex-row items-center px-3 bg-white border border-neutral-200 rounded-xl'>
                 <Percent size={20} color='#6b7280' className='mr-2' />
                 <Input
-                  className='flex-1 h-12 px-0 ml-2 text-base font-semibold border-0'
+                  className='flex-1 h-12 px-0 ml-2 text-base font-semibold border-0 !bg-white shadow-none'
                   placeholder='5'
                   value={bungaDisplay}
                   onChangeText={handleBungaChange}
@@ -449,7 +449,7 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
                     {formatCurrency(
                       calculateResult.plafondCost,
                       'id-ID',
-                      'IDR'
+                      'IDR',
                     )}
                   </Text>
                 </View>
@@ -472,7 +472,7 @@ const KPRCalculatorScreen = ({ price }: { price?: number }) => {
                     {formatCurrency(
                       calculateResult.plafondCost + calculateResult.totalBunga,
                       'id-ID',
-                      'IDR'
+                      'IDR',
                     )}
                   </Text>
                 </View>

@@ -36,3 +36,34 @@ export function getApiBaseUrl(): string {
 
   return baseUrl;
 }
+
+export function getAdminApiBaseUrl(): string {
+  const appEnv = process.env.EXPO_PUBLIC_APP_ENV || 'development';
+
+  if (appEnv === 'production') {
+    return (
+      process.env.EXPO_PUBLIC_PROD_ADMIN_API_BASE_URL ||
+      'http://localhost:80/v1/admin'
+    );
+  }
+
+  // Development environment
+  const baseUrl =
+    process.env.EXPO_PUBLIC_ADMIN_API_BASE_URL ||
+    'http://localhost:80/v1/admin';
+
+  // Jika sudah menggunakan IP address (tidak localhost), gunakan langsung
+  if (baseUrl.includes('192.168') || baseUrl.includes('10.0.2.2')) {
+    return baseUrl;
+  }
+
+  // Jika localhost, coba deteksi platform
+  if (baseUrl.includes('localhost')) {
+    if (Platform.OS === 'android') {
+      // Android emulator: localhost → 10.0.2.2
+      return baseUrl.replace('localhost', '10.0.2.2');
+    }
+  }
+
+  return baseUrl;
+}

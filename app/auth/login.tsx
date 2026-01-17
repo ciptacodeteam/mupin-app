@@ -106,14 +106,14 @@ const LoginScreen = () => {
       setLoginAttempts(0);
       reset();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)/home');
+      router.replace('/');
     },
     onError: (err) => {
       console.log('Login Error:', err);
       handleFailedAttempt();
       setApiError(
         err?.message ||
-          'Gagal masuk. Periksa kembali email dan kata sandi Anda.'
+          'Gagal masuk. Periksa kembali email dan kata sandi Anda.',
       );
     },
   });
@@ -121,7 +121,7 @@ const LoginScreen = () => {
   const onSubmit: SubmitHandler<FormData> = (data) => {
     if (isLockedOut) {
       setApiError(
-        `Terlalu banyak percobaan. Coba lagi dalam ${remainingTime} detik.`
+        `Terlalu banyak percobaan. Coba lagi dalam ${remainingTime} detik.`,
       );
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;

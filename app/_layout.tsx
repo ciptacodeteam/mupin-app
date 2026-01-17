@@ -43,7 +43,7 @@ function RootLayoutContent() {
 
     if (isAuthenticated && inAuthGroup) {
       // User is logged in but on login/register pages -> go to Home
-      router.replace('/(tabs)');
+      router.replace('/');
     } else if (!isAuthenticated && !inAuthGroup) {
       // User is logged out but trying to access protected pages -> go to Login
       router.replace('/auth/login');
