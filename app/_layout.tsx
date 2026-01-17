@@ -38,13 +38,14 @@ function RootLayoutContent() {
   useEffect(() => {
     if (!isHydrated || !navigationState?.key) return;
 
+    // Check if the first segment is 'auth' group
     const inAuthGroup = segments[0] === 'auth';
 
     if (isAuthenticated && inAuthGroup) {
-      // If user is signed in and tries to access auth routes, redirect to home
-      router.replace('/(tabs)/home');
+      // User is logged in but on login/register pages -> go to Home
+      router.replace('/(tabs)');
     } else if (!isAuthenticated && !inAuthGroup) {
-      // If user is not signed in and tries to access protected routes, redirect to login
+      // User is logged out but trying to access protected pages -> go to Login
       router.replace('/auth/login');
     }
 
@@ -57,13 +58,10 @@ function RootLayoutContent() {
         headerShown: false,
       }}
     >
-      {isAuthenticated ? (
-        <Stack.Screen name='(tabs)' />
-      ) : (
-        <Stack.Screen name='auth/login' />
-      )}
+      <Stack.Screen name='(tabs)' />
+      <Stack.Screen name='auth/login' />
       <Stack.Screen name='scan-qr' />
-      <Stack.Screen name='search' />
+      <Stack.Screen name='search/index' />
       <Stack.Screen name='property/[id]' />
       <Stack.Screen name='index' />
     </Stack>
