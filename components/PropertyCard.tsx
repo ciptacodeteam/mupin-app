@@ -1,9 +1,19 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import { formatCurrency } from '@/lib/utils';
+import useFavoritesStore, {
+  FavoriteProperty,
+} from '@/stores/useFavoritesStore';
 import { Image } from 'expo-image';
-import { Bath, BedDouble, MapPin, Ruler } from 'lucide-react-native';
-import { TouchableOpacity, View } from 'react-native';
+import {
+  Bath,
+  BedDouble,
+  Heart,
+  MapPin,
+  Ruler,
+  Share2,
+} from 'lucide-react-native';
+import { Share, TouchableOpacity, View } from 'react-native';
 
 export interface PropertyCardProps {
   id: string;
@@ -18,9 +28,11 @@ export interface PropertyCardProps {
   image: string | number; // URL or require()
   type: 'Rumah' | 'Apartemen' | 'Ruko' | 'Kost';
   onPress: () => void;
+  showActions?: boolean;
 }
 
 export function PropertyCard({
+  id,
   title,
   price,
   address,
@@ -28,7 +40,39 @@ export function PropertyCard({
   image,
   type,
   onPress,
+  showActions = true,
 }: PropertyCardProps) {
+  const { addFavorite, removeFavorite, isFavorite } = useFavoritesStore();
+  const isFav = isFavorite(id);
+
+  const handleToggleFavorite = () => {
+    if (isFav) {
+      removeFavorite(id);
+    } else {
+      const property: FavoriteProperty = {
+        id,
+        title,
+        price,
+        address,
+        specs,
+        image: typeof image === 'string' ? image : '',
+        type,
+      };
+      addFavorite(property);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const message = `🏠 ${title}\n\n💰 ${formatCurrency(price, 'id-ID', 'IDR')}\n📍 ${address}\n\n🛏️ ${specs.beds} Kamar Tidur\n🚿 ${specs.baths} Kamar Mandi\n📐 ${specs.area} m²\n\n#${type} #Properti #MupinApp`;
+      await Share.share({
+        message,
+        title: title,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
       <Card className='py-0 mb-4 overflow-hidden shadow-sm border-neutral-100 rounded-3xl'>
@@ -45,6 +89,28 @@ export function PropertyCard({
               {type}
             </Text>
           </View>
+
+          {/* Action Buttons */}
+          {showActions && (
+            <View className='absolute flex-row gap-2 top-4 right-4'>
+              <TouchableOpacity
+                onPress={handleShare}
+                className='items-center justify-center rounded-full w-9 h-9 bg-white/90 backdrop-blur-md'
+              >
+                <Share2 size={18} color='#374151' />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleToggleFavorite}
+                className='items-center justify-center rounded-full w-9 h-9 bg-white/90 backdrop-blur-md'
+              >
+                <Heart
+                  size={18}
+                  color={isFav ? '#ef4444' : '#374151'}
+                  fill={isFav ? '#ef4444' : 'transparent'}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
           <View className='absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent' />
 
           <Text className='absolute text-2xl font-bold text-white shadow-sm bottom-4 left-4'>

@@ -5,10 +5,12 @@ import {
   Option,
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'expo-router';
@@ -30,7 +32,7 @@ import {
   Zap,
 } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Control, Controller, UseFormSetValue, useForm } from 'react-hook-form';
 import {
   Platform,
   ScrollView,
@@ -71,9 +73,9 @@ const PROPERTY_TYPES = [
 export default function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [transactionType, setTransactionType] = useState<'Jual' | 'Sewa'>(
-    'Jual'
-  );
+  // We can let react-hook-form manage the single source of truth,
+  // but Tabs requires a value prop. We'll sync them.
+  const [activeTab, setActiveTab] = useState('Jual');
 
   const contentInsets = {
     top: insets.top,
@@ -104,47 +106,16 @@ export default function SearchScreen() {
     },
   });
 
-  const selectedPropertyType = watch('propertyType');
+  const onTabChange = (val: string) => {
+    setActiveTab(val);
+    setValue('transactionType', val as 'Jual' | 'Sewa');
+  };
 
   const onSearch = (data: SearchFormData) => {
     console.log('Search Data:', data);
     // In a real app, this would filter the query or navigate with params
     router.back();
   };
-
-  const CounterInput = ({
-    label,
-    value,
-    onChange,
-    icon: Icon,
-  }: {
-    label: string;
-    value: number;
-    onChange: (val: number) => void;
-    icon: any;
-  }) => (
-    <View className='flex-1 p-3 border border-neutral-200 rounded-xl'>
-      <View className='flex-row items-center gap-2 mb-2'>
-        <Icon size={16} color='#64748b' />
-        <Text className='text-xs font-medium text-neutral-500'>{label}</Text>
-      </View>
-      <View className='flex-row items-center justify-between'>
-        <TouchableOpacity
-          onPress={() => onChange(Math.max(0, value - 1))}
-          className='items-center justify-center w-8 h-8 rounded-full bg-neutral-100'
-        >
-          <Text className='text-lg font-medium text-neutral-600'>-</Text>
-        </TouchableOpacity>
-        <Text className='text-lg font-bold text-neutral-900'>{value}+</Text>
-        <TouchableOpacity
-          onPress={() => onChange(value + 1)}
-          className='items-center justify-center w-8 h-8 rounded-full bg-blue-50'
-        >
-          <Text className='text-lg font-medium text-blue-600'>+</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
 
   return (
     <View className='flex-1 bg-white'>
@@ -176,386 +147,38 @@ export default function SearchScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        {/* Transaction Type */}
         <View className='p-6 pb-2'>
-          <View className='flex-row p-1 mb-6 bg-neutral-100 rounded-xl'>
-            {(['Jual', 'Sewa'] as const).map((type) => (
-              <TouchableOpacity
-                key={type}
-                onPress={() => {
-                  setTransactionType(type);
-                  setValue('transactionType', type);
-                }}
-                className={cn(
-                  'flex-1 items-center py-3 rounded-lg',
-                  transactionType === type ? 'bg-white shadow-sm' : ''
-                )}
-              >
-                <Text
-                  className={cn(
-                    'font-bold text-sm',
-                    transactionType === type
-                      ? 'text-blue-600'
-                      : 'text-neutral-500'
-                  )}
-                >
-                  Di{type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Tabs
+            value={activeTab}
+            onValueChange={onTabChange}
+            className='w-full'
+          >
+            <TabsList className='w-full h-10 mb-6'>
+              {['Jual', 'Sewa'].map((type) => (
+                <TabsTrigger key={type} value={type} className='flex-1 '>
+                  <Text className='text-base font-semibold'>{type}</Text>
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-          {/* Property Type Grid */}
-          <Text className='mb-4 text-sm font-bold text-neutral-900'>
-            Tipe Properti
-          </Text>
-          <View className='flex-row flex-wrap gap-3 mb-8'>
-            {PROPERTY_TYPES.map((type) => {
-              const Icon = type.icon;
-              const isSelected = selectedPropertyType === type.id;
-              return (
-                <TouchableOpacity
-                  key={type.id}
-                  onPress={() => setValue('propertyType', type.id)}
-                  className={cn(
-                    'items-center justify-center w-[30%] h-24 rounded-2xl border-2',
-                    isSelected
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-transparent bg-neutral-50'
-                  )}
-                >
-                  <Icon
-                    size={24}
-                    color={isSelected ? '#2563eb' : '#64748b'}
-                    className='mb-2'
-                  />
-                  <Text
-                    className={cn(
-                      'text-xs font-medium',
-                      isSelected ? 'text-blue-600' : 'text-neutral-600'
-                    )}
-                  >
-                    {type.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Price Range */}
-          <View className='mb-8'>
-            <View className='flex-row items-center gap-2 mb-4'>
-              <Wallet size={18} color='#1e293b' />
-              <Text className='text-sm font-bold text-neutral-900'>
-                Rentang Harga
-              </Text>
-            </View>
-            <View className='flex-row gap-4'>
-              <Controller
+            <TabsContent value='Jual'>
+              <SearchFormContent
                 control={control}
-                name='priceMin'
-                render={({ field: { onChange, value } }) => (
-                  <View className='flex-1'>
-                    <Label className='mb-1.5 text-xs text-neutral-500'>
-                      Minimum
-                    </Label>
-                    <Input
-                      placeholder='0'
-                      keyboardType='numeric'
-                      className='bg-neutral-50 border-neutral-200'
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  </View>
-                )}
+                setValue={setValue}
+                watch={watch}
+                contentInsets={contentInsets}
               />
-              <Controller
+            </TabsContent>
+
+            <TabsContent value='Sewa'>
+              <SearchFormContent
                 control={control}
-                name='priceMax'
-                render={({ field: { onChange, value } }) => (
-                  <View className='flex-1'>
-                    <Label className='mb-1.5 text-xs text-neutral-500'>
-                      Maksimum
-                    </Label>
-                    <Input
-                      placeholder='Milyar'
-                      keyboardType='numeric'
-                      className='bg-neutral-50 border-neutral-200'
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  </View>
-                )}
+                setValue={setValue}
+                watch={watch}
+                contentInsets={contentInsets}
               />
-            </View>
-          </View>
-
-          {/* Specifications */}
-          <View className='mb-8'>
-            <Text className='mb-4 text-sm font-bold text-neutral-900'>
-              Spesifikasi Utama
-            </Text>
-            <View className='flex-row gap-3 mb-3'>
-              <Controller
-                control={control}
-                name='beds'
-                render={({ field: { onChange, value } }) => (
-                  <CounterInput
-                    label='K. Tidur'
-                    value={value}
-                    onChange={onChange}
-                    icon={BedDouble}
-                  />
-                )}
-              />
-              <Controller
-                control={control}
-                name='baths'
-                render={({ field: { onChange, value } }) => (
-                  <CounterInput
-                    label='K. Mandi'
-                    value={value}
-                    onChange={onChange}
-                    icon={Bath}
-                  />
-                )}
-              />
-            </View>
-            <View className='flex-row gap-3'>
-              <Controller
-                control={control}
-                name='floors'
-                render={({ field: { onChange, value } }) => (
-                  <CounterInput
-                    label='Lantai'
-                    value={value}
-                    onChange={onChange}
-                    icon={Layers}
-                  />
-                )}
-              />
-              <View className='flex-1' />
-            </View>
-          </View>
-
-          {/* Area */}
-          <View className='mb-8'>
-            <Text className='mb-4 text-sm font-bold text-neutral-900'>
-              Luas Area (m²)
-            </Text>
-            <View className='flex-row gap-4'>
-              <Controller
-                control={control}
-                name='landAreaMin'
-                render={({ field: { onChange, value } }) => (
-                  <View className='flex-1'>
-                    <Label className='mb-1.5 text-xs text-neutral-500'>
-                      Luas Tanah Min.
-                    </Label>
-                    <Input
-                      placeholder='60'
-                      keyboardType='numeric'
-                      className='bg-neutral-50 border-neutral-200'
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  </View>
-                )}
-              />
-              <Controller
-                control={control}
-                name='buildingAreaMin'
-                render={({ field: { onChange, value } }) => (
-                  <View className='flex-1'>
-                    <Label className='mb-1.5 text-xs text-neutral-500'>
-                      Luas Bangunan Min.
-                    </Label>
-                    <Input
-                      placeholder='36'
-                      keyboardType='numeric'
-                      className='bg-neutral-50 border-neutral-200'
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  </View>
-                )}
-              />
-            </View>
-          </View>
-
-          {/* Advanced Filters Accordion-style layout */}
-          <View className='mb-6'>
-            <Text className='mb-4 text-sm font-bold text-neutral-900'>
-              Detail Lanjutan
-            </Text>
-
-            <View className='gap-4'>
-              <Controller
-                control={control}
-                name='certificate'
-                render={({ field: { onChange, value } }) => {
-                  const options = [
-                    { label: 'SHM - Sertifikat Hak Milik', value: 'SHM' },
-                    { label: 'HGB - Hak Guna Bangunan', value: 'HGB' },
-                    { label: 'Strata Title', value: 'Strata' },
-                    { label: 'Girik / Lainnya', value: 'Lainnya' },
-                  ];
-                  const selectedOption = options.find(
-                    (opt) => opt.value === value
-                  );
-
-                  return (
-                    <Select
-                      onValueChange={(option: SearchOption) => {
-                        onChange(option ? option.value : '');
-                      }}
-                      value={selectedOption}
-                    >
-                      <SelectTrigger className='w-full'>
-                        <View className='flex-row items-center gap-2'>
-                          <FileText size={16} color='#64748b' />
-                          <SelectValue placeholder='Jenis Sertifikat' />
-                        </View>
-                      </SelectTrigger>
-                      <SelectContent insets={contentInsets}>
-                        {options.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            label={option.label}
-                            value={option.value}
-                          />
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  );
-                }}
-              />
-
-              <Controller
-                control={control}
-                name='electricity'
-                render={({ field: { onChange, value } }) => {
-                  const options = [
-                    { label: '900 VA', value: '900' },
-                    { label: '1300 VA', value: '1300' },
-                    { label: '2200 VA', value: '2200' },
-                    { label: '3500 VA', value: '3500' },
-                    { label: '4400 VA+', value: '4400+' },
-                  ];
-                  const selectedOption = options.find(
-                    (opt) => opt.value === value
-                  );
-
-                  return (
-                    <Select
-                      onValueChange={(option: SearchOption) => {
-                        onChange(option ? option.value : '');
-                      }}
-                      value={selectedOption}
-                    >
-                      <SelectTrigger className='w-full'>
-                        <View className='flex-row items-center gap-2'>
-                          <Zap size={16} color='#64748b' />
-                          <SelectValue placeholder='Daya Listrik' />
-                        </View>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {options.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            label={option.label}
-                            value={option.value}
-                          />
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  );
-                }}
-              />
-
-              <Controller
-                control={control}
-                name='orientation'
-                render={({ field: { onChange, value } }) => {
-                  const options = [
-                    { label: 'Utara', value: 'Utara' },
-                    { label: 'Selatan', value: 'Selatan' },
-                    { label: 'Timur', value: 'Timur' },
-                    { label: 'Barat', value: 'Barat' },
-                  ];
-                  const selectedOption = options.find(
-                    (opt) => opt.value === value
-                  );
-
-                  return (
-                    <Select
-                      onValueChange={(option: SearchOption) => {
-                        onChange(option ? option.value : '');
-                      }}
-                      value={selectedOption}
-                    >
-                      <SelectTrigger className='w-full'>
-                        <View className='flex-row items-center gap-2'>
-                          <Compass size={16} color='#64748b' />
-                          <SelectValue placeholder='Hadap Bangunan' />
-                        </View>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {options.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            label={option.label}
-                            value={option.value}
-                          />
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  );
-                }}
-              />
-
-              <Controller
-                control={control}
-                name='condition'
-                render={({ field: { onChange, value } }) => {
-                  const options = [
-                    { label: 'Baru', value: 'Baru' },
-                    { label: 'Siap Huni', value: 'Siap Huni' },
-                    { label: 'Butuh Renovasi', value: 'Renovasi' },
-                    { label: 'Indent', value: 'Indent' },
-                  ];
-                  const selectedOption = options.find(
-                    (opt) => opt.value === value
-                  );
-
-                  return (
-                    <Select
-                      onValueChange={(option: SearchOption) => {
-                        onChange(option ? option.value : '');
-                      }}
-                      value={selectedOption}
-                    >
-                      <SelectTrigger className='w-full'>
-                        <View className='flex-row items-center gap-2'>
-                          <Hammer size={16} color='#64748b' />
-                          <SelectValue placeholder='Kondisi Bangunan' />
-                        </View>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {options.map((option) => (
-                          <SelectItem
-                            key={option.value}
-                            label={option.label}
-                            value={option.value}
-                          />
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  );
-                }}
-              />
-            </View>
-          </View>
+            </TabsContent>
+          </Tabs>
         </View>
       </ScrollView>
 
@@ -577,3 +200,408 @@ export default function SearchScreen() {
     </View>
   );
 }
+
+// Reusable Form Content Component
+const SearchFormContent = ({
+  control,
+  setValue,
+  watch,
+  contentInsets,
+}: {
+  control: Control<SearchFormData>;
+  setValue: UseFormSetValue<SearchFormData>;
+  watch: any;
+  contentInsets: any;
+}) => {
+  const selectedPropertyType = watch('propertyType');
+
+  const CounterInput = ({
+    label,
+    value,
+    onChange,
+    icon: Icon,
+  }: {
+    label: string;
+    value: number;
+    onChange: (val: number) => void;
+    icon: any;
+  }) => (
+    <View className='flex-1 p-3 border border-neutral-200 rounded-xl'>
+      <View className='flex-row items-center gap-2 mb-2'>
+        <Icon size={16} color='#64748b' />
+        <Text className='text-xs font-medium text-neutral-500'>{label}</Text>
+      </View>
+      <View className='flex-row items-center justify-between'>
+        <TouchableOpacity
+          onPress={() => onChange(Math.max(0, value - 1))}
+          className='items-center justify-center w-8 h-8 rounded-full bg-neutral-100'
+        >
+          <Text className='text-lg font-medium text-neutral-600'>-</Text>
+        </TouchableOpacity>
+        <Text className='text-lg font-bold text-neutral-900'>{value} +</Text>
+        <TouchableOpacity
+          onPress={() => onChange(value + 1)}
+          className='items-center justify-center w-8 h-8 rounded-full bg-blue-50'
+        >
+          <Text className='text-lg font-medium text-blue-600'>+</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  return (
+    <View>
+      {/* Property Type Grid */}
+      <Text className='mb-4 text-sm font-bold text-neutral-900'>
+        Tipe Properti
+      </Text>
+      <View className='flex-row flex-wrap gap-3 mb-8'>
+        {PROPERTY_TYPES.map((type) => {
+          const Icon = type.icon;
+          const isSelected = selectedPropertyType === type.id;
+          return (
+            <TouchableOpacity
+              key={type.id}
+              onPress={() => setValue('propertyType', type.id)}
+              className={cn(
+                'items-center justify-center w-[30%] h-24 rounded-2xl border-2',
+                isSelected
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-transparent bg-neutral-50'
+              )}
+            >
+              <Icon
+                size={24}
+                color={isSelected ? '#2563eb' : '#64748b'}
+                className='mb-2'
+              />
+              <Text
+                className={cn(
+                  'text-xs font-medium',
+                  isSelected ? 'text-blue-600' : 'text-neutral-600'
+                )}
+              >
+                {type.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Price Range */}
+      <View className='mb-8'>
+        <View className='flex-row items-center gap-2 mb-4'>
+          <Wallet size={18} color='#1e293b' />
+          <Text className='text-sm font-bold text-neutral-900'>
+            Rentang Harga
+          </Text>
+        </View>
+        <View className='flex-row gap-4'>
+          <Controller
+            control={control}
+            name='priceMin'
+            render={({ field: { onChange, value } }) => (
+              <View className='flex-1'>
+                <Label className='mb-1.5 text-xs text-neutral-500'>
+                  Minimum
+                </Label>
+                <Input
+                  placeholder='0'
+                  keyboardType='numeric'
+                  className='bg-neutral-50 border-neutral-200'
+                  value={value}
+                  onChangeText={onChange}
+                />
+              </View>
+            )}
+          />
+          <Controller
+            control={control}
+            name='priceMax'
+            render={({ field: { onChange, value } }) => (
+              <View className='flex-1'>
+                <Label className='mb-1.5 text-xs text-neutral-500'>
+                  Maksimum
+                </Label>
+                <Input
+                  placeholder='Milyar'
+                  keyboardType='numeric'
+                  className='bg-neutral-50 border-neutral-200'
+                  value={value}
+                  onChangeText={onChange}
+                />
+              </View>
+            )}
+          />
+        </View>
+      </View>
+
+      {/* Specifications */}
+      <View className='mb-8'>
+        <Text className='mb-4 text-sm font-bold text-neutral-900'>
+          Spesifikasi Utama
+        </Text>
+        <View className='flex-row gap-3 mb-3'>
+          <Controller
+            control={control}
+            name='beds'
+            render={({ field: { onChange, value } }) => (
+              <CounterInput
+                label='K. Tidur'
+                value={value}
+                onChange={onChange}
+                icon={BedDouble}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name='baths'
+            render={({ field: { onChange, value } }) => (
+              <CounterInput
+                label='K. Mandi'
+                value={value}
+                onChange={onChange}
+                icon={Bath}
+              />
+            )}
+          />
+        </View>
+        <View className='flex-row gap-3'>
+          <Controller
+            control={control}
+            name='floors'
+            render={({ field: { onChange, value } }) => (
+              <CounterInput
+                label='Lantai'
+                value={value}
+                onChange={onChange}
+                icon={Layers}
+              />
+            )}
+          />
+          <View className='flex-1' />
+        </View>
+      </View>
+
+      {/* Area */}
+      <View className='mb-8'>
+        <Text className='mb-4 text-sm font-bold text-neutral-900'>
+          Luas Area (m²)
+        </Text>
+        <View className='flex-row gap-4'>
+          <Controller
+            control={control}
+            name='landAreaMin'
+            render={({ field: { onChange, value } }) => (
+              <View className='flex-1'>
+                <Label className='mb-1.5 text-xs text-neutral-500'>
+                  Luas Tanah Min.
+                </Label>
+                <Input
+                  placeholder='60'
+                  keyboardType='numeric'
+                  className='bg-neutral-50 border-neutral-200'
+                  value={value}
+                  onChangeText={onChange}
+                />
+              </View>
+            )}
+          />
+          <Controller
+            control={control}
+            name='buildingAreaMin'
+            render={({ field: { onChange, value } }) => (
+              <View className='flex-1'>
+                <Label className='mb-1.5 text-xs text-neutral-500'>
+                  Luas Bangunan Min.
+                </Label>
+                <Input
+                  placeholder='36'
+                  keyboardType='numeric'
+                  className='bg-neutral-50 border-neutral-200'
+                  value={value}
+                  onChangeText={onChange}
+                />
+              </View>
+            )}
+          />
+        </View>
+      </View>
+
+      {/* Advanced Filters Accordion-style layout */}
+      <View className='mb-6'>
+        <Text className='mb-4 text-sm font-bold text-neutral-900'>
+          Detail Lanjutan
+        </Text>
+
+        <View className='gap-4'>
+          <Controller
+            control={control}
+            name='certificate'
+            render={({ field: { onChange, value } }) => {
+              const options = [
+                { label: 'SHM - Sertifikat Hak Milik', value: 'SHM' },
+                { label: 'HGB - Hak Guna Bangunan', value: 'HGB' },
+                { label: 'Strata Title', value: 'Strata' },
+                { label: 'Girik / Lainnya', value: 'Lainnya' },
+              ];
+              const selectedOption = options.find((opt) => opt.value === value);
+
+              return (
+                <Select
+                  onValueChange={(option: SearchOption) => {
+                    onChange(option ? option.value : '');
+                  }}
+                  value={selectedOption}
+                >
+                  <SelectTrigger className='w-full'>
+                    <View className='flex-row items-center gap-2'>
+                      <FileText size={16} color='#64748b' />
+                      <SelectValue placeholder='Jenis Sertifikat' />
+                    </View>
+                  </SelectTrigger>
+                  <SelectContent insets={contentInsets}>
+                    <SelectGroup>
+                      {options.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          label={option.label}
+                          value={option.value}
+                        />
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              );
+            }}
+          />
+
+          <Controller
+            control={control}
+            name='electricity'
+            render={({ field: { onChange, value } }) => {
+              const options = [
+                { label: '900 VA', value: '900' },
+                { label: '1300 VA', value: '1300' },
+                { label: '2200 VA', value: '2200' },
+                { label: '3500 VA', value: '3500' },
+                { label: '4400 VA+', value: '4400+' },
+              ];
+              const selectedOption = options.find((opt) => opt.value === value);
+
+              return (
+                <Select
+                  onValueChange={(option: SearchOption) => {
+                    onChange(option ? option.value : '');
+                  }}
+                  value={selectedOption}
+                >
+                  <SelectTrigger className='w-full'>
+                    <View className='flex-row items-center gap-2'>
+                      <Zap size={16} color='#64748b' />
+                      <SelectValue placeholder='Daya Listrik' />
+                    </View>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {options.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          label={option.label}
+                          value={option.value}
+                        />
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              );
+            }}
+          />
+
+          <Controller
+            control={control}
+            name='orientation'
+            render={({ field: { onChange, value } }) => {
+              const options = [
+                { label: 'Utara', value: 'Utara' },
+                { label: 'Selatan', value: 'Selatan' },
+                { label: 'Timur', value: 'Timur' },
+                { label: 'Barat', value: 'Barat' },
+              ];
+              const selectedOption = options.find((opt) => opt.value === value);
+
+              return (
+                <Select
+                  onValueChange={(option: SearchOption) => {
+                    onChange(option ? option.value : '');
+                  }}
+                  value={selectedOption}
+                >
+                  <SelectTrigger className='w-full'>
+                    <View className='flex-row items-center gap-2'>
+                      <Compass size={16} color='#64748b' />
+                      <SelectValue placeholder='Hadap Bangunan' />
+                    </View>
+                  </SelectTrigger>
+                  <SelectContent insets={contentInsets}>
+                    <SelectGroup>
+                      {options.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          label={option.label}
+                          value={option.value}
+                        />
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              );
+            }}
+          />
+
+          <Controller
+            control={control}
+            name='condition'
+            render={({ field: { onChange, value } }) => {
+              const options = [
+                { label: 'Baru', value: 'Baru' },
+                { label: 'Siap Huni', value: 'Siap Huni' },
+                { label: 'Butuh Renovasi', value: 'Renovasi' },
+                { label: 'Indent', value: 'Indent' },
+              ];
+              const selectedOption = options.find((opt) => opt.value === value);
+
+              return (
+                <Select
+                  onValueChange={(option: SearchOption) => {
+                    onChange(option ? option.value : '');
+                  }}
+                  value={selectedOption}
+                >
+                  <SelectTrigger className='w-full'>
+                    <View className='flex-row items-center gap-2'>
+                      <Hammer size={16} color='#64748b' />
+                      <SelectValue placeholder='Kondisi Bangunan' />
+                    </View>
+                  </SelectTrigger>
+                  <SelectContent insets={contentInsets}>
+                    <SelectGroup>
+                      {options.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          label={option.label}
+                          value={option.value}
+                        />
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              );
+            }}
+          />
+        </View>
+      </View>
+    </View>
+  );
+};

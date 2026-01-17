@@ -58,6 +58,8 @@ function RootLayoutContent() {
         <>
           <Stack.Screen name='(tabs)' />
           <Stack.Screen name='scan-qr' />
+          <Stack.Screen name='search' />
+          <Stack.Screen name='property/[id]' />
         </>
       ) : (
         <Stack.Screen name='auth/login' />
@@ -68,11 +70,13 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <RootLayoutContent />
-      </SafeAreaProvider>
+    <>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <RootLayoutContent />
+        </SafeAreaProvider>
+      </QueryClientProvider>
       <PortalHost />
-    </QueryClientProvider>
+    </>
   );
 }
