@@ -22,8 +22,8 @@ const TAB_ITEMS: BottomNavItem[] = [
     label: 'Home',
     icon: 'home-outline',
     activeIcon: 'home',
-    route: '/(tabs)/home',
-    pathSegment: 'home',
+    route: '/(tabs)',
+    pathSegment: '(tabs)',
   },
   {
     name: 'kpr',
@@ -78,7 +78,7 @@ const BottomNavigation = () => {
               <Text
                 className={cn(
                   `text-xs mt-1`,
-                  isActive ? 'text-blue-500 font-semibold' : 'text-gray-400'
+                  isActive ? 'text-blue-500 font-semibold' : 'text-gray-400',
                 )}
               >
                 {item.label}

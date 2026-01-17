@@ -13,7 +13,7 @@ export default function TabsLayout() {
         }}
       >
         <Stack.Screen
-          name='home'
+          name='index'
           options={{
             title: 'Home',
             headerShown: false,
